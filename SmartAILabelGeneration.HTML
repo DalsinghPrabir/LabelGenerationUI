@@ -1,0 +1,231 @@
+<html>
+<head>
+  <title>Label Text Suggestion</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      text-align: center;
+      background-color: #f9f9f9;
+    }
+
+    #headerImage {
+      width: 40%;
+      max-height: 80px;
+      object-fit: cover;
+      margin: 20px auto;
+      border-radius: 10px;
+      display: block;
+    }
+
+    h3 {
+      font-size: 24px;
+      margin: 30px 0 20px;
+    }
+
+    select, textarea, button {
+      font-size: 18px;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+      width: 60%;
+      max-width: 300px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin: 10px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    textarea {
+      height: 150px;
+      resize: vertical;
+    }
+
+    #sampleImage {
+      width: 300px;
+      height: 180px;
+      border: 1px solid #ccc;
+      margin-top: 20px;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 🔝 TOP HEADER IMAGE -->
+
+  <h3>Select Label Type</h3>
+
+  <select id="productType">
+    <option value="ID Card">ID Card</option>
+    <option value="Event Badge">Event Badge</option>
+    <option value="Basketball">Basketball</option>
+    <option value="School Tag">School Tag</option>
+  </select>
+
+  <br>
+
+  <button onclick="suggestLabelText() ">Suggest Text</button>
+  <button onclick="downloadLabelText()">Download Text</button>
+  <button onclick="printLabel()">Print</button>
+
+  <br>
+
+  <textarea id="labelText" placeholder="Suggested label text will appear here..."></textarea>
+
+  <br>
+
+  <img id="sampleImage" src="" alt="Sample Image">
+
+  <script>
+    function suggestLabelText() {
+      const productType = document.getElementById('productType').value;
+      const labelTextBox = document.getElementById('labelText');
+      const sampleImage = document.getElementById('sampleImage');
+
+      const suggestions = {
+        "ID Card": {
+          text: `Name: Dalsingh Prabir Ray\nRole: Software Engineer\nDept: IT`,
+          image: "image/Dalsingh.jpeg"
+        },
+        "Event Badge": {
+          text: `Speaker: Dr. Ajay Kohli\nSession: Future of AI\nLocation: Hall A`,
+          image: "image/CHATGPT.png"
+        },
+        "Basketball": {
+          text: `Name: Michael Jordan\nJersey: 23\nTeam: Chicago Bulls`,
+          image: "image/jordan.jpg"
+        },
+        "School Tag": {
+          text: `Name: Rahul Roy\nClass: 11B\nSchool: Green Valley Public School`,
+          image: "image/University.jpg"
+        }
+      };
+
+      const selected = suggestions[productType];
+      if (selected) {
+        labelTextBox.value = selected.text;
+        sampleImage.src = selected.image;
+      } else {
+        labelTextBox.value = "Sample text not available.";
+        sampleImage.src = "";
+      }
+    }
+
+
+
+function GetLabel() {
+    const productType = document.getElementById("productType").value;
+
+    fetch('https://localhost:44302/api/getlabel', {  // POST not GET
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ labelType: productType })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("labelText").value = data.text;
+    })
+    .catch(err => {
+        alert("Error generating label from AI . Please check your network.");
+    });
+}
+
+    function downloadLabelText() {
+      const text = document.getElementById('labelText').value;
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'label.txt';
+      a.click();
+
+      URL.revokeObjectURL(url);
+    }
+
+    function printLabel() {
+  const text = document.getElementById('labelText').value;
+  const imageSrc = document.getElementById('sampleImage').src;
+
+  const printWindow = window.open('', '', 'width=600,height=800');
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Print Label</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            position: relative;
+          }
+
+          .watermark {
+            position: fixed;
+            top: 40%;
+            left: 20%;
+            font-size: 48px;
+            color: rgba(0,0,0,0.05);
+            transform: rotate(-30deg);
+            z-index: 0;
+            pointer-events: none;
+          }
+
+          .content {
+            position: relative;
+            z-index: 1;
+            margin-top: 20px;
+          }
+
+          .company-logo {
+            max-height: 80px;
+            margin: 20px auto;
+            display: block;
+          }
+
+          .label-text {
+            font-size: 18px;
+            white-space: pre-wrap;
+            margin-top: 20px;
+          }
+
+          img.label-image {
+            max-width: 300px;
+            max-height: 200px;
+            margin-top: 20px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="watermark">© Brady Inc.</div>
+        <div class="content">
+          <img class="company-logo" src="image/BRADY.JPG" alt="Company Logo" />
+          <div class="label-text">${text.replace(/\n/g, '<br>')}</div>
+          ${imageSrc ? `<img class="label-image" src="${imageSrc}" alt="Sample Image" />` : ''}
+        </div>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+}
+
+  </script>
+
+</body>
+</html>
